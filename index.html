@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Vocabulary Builder – İngilizce kelime öğrenme uygulaması">
+    <title>Vocabulary Builder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Confetti Canvas Overlay -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <div id="app">
+
+        <!-- ══════════════════════════════════════
+         1. FLASHCARD VIEW (Ana Ekran)
+    ══════════════════════════════════════ -->
+        <div id="flashcard-view" class="view active">
+            <header class="fc-header">
+                <div class="fc-deck-label">Günlük Deste</div>
+                <div class="fc-progress-dot-row" id="fc-dot-row"></div>
+                <button class="icon-btn" id="btn-fc-stats" aria-label="İstatistikler">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round">
+                        <path d="M18 20V10M12 20V4M6 20v-6" />
+                    </svg>
+                </button>
+            </header>
+
+            <main class="fc-main">
+                <!-- Card -->
+                <div class="card-stage" id="card-stage">
+                    <div class="flashcard" id="active-flashcard" role="button" tabindex="0" aria-label="Kartı çevir">
+                        <div class="flashcard-inner">
+                            <div class="flashcard-front">
+                                <span class="word-pos" id="fc-pos"></span>
+                                <h2 class="word-english" id="fc-english">word</h2>
+                                <button class="speak-btn" id="btn-speak-front" aria-label="Sesli oku"
+                                    title="Telaffuzu dinle">
+                                    🔊
+                                </button>
+                                <span class="tap-hint">Çevirmek için dokun 👆</span>
+                            </div>
+                            <div class="flashcard-back">
+                                <div class="back-english-row">
+                                    <span class="back-english" id="fc-english-back">word</span>
+                                    <button class="speak-btn speak-btn-sm" id="btn-speak-back" aria-label="Sesli oku"
+                                        title="Telaffuzu dinle">
+                                        🔊
+                                    </button>
+                                </div>
+                                <h3 class="word-turkish" id="fc-turkish">anlam</h3>
+                                <div class="sentence-box">
+                                    <span class="sentence-label">Örnek cümle</span>
+                                    <p class="word-sentence" id="fc-sentence">…</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons (shown after flip) -->
+                <div class="fc-actions hidden" id="fc-actions">
+                    <button class="action-btn btn-dont-know" id="btn-dont-know">
+                        <span class="action-icon">❌</span>
+                        <span class="action-label">Bilmiyorum</span>
+                    </button>
+                    <button class="action-btn btn-hard" id="btn-hard">
+                        <span class="action-icon">🤔</span>
+                        <span class="action-label">Zorlandım</span>
+                    </button>
+                    <button class="action-btn btn-easy" id="btn-easy">
+                        <span class="action-icon">✅</span>
+                        <span class="action-label">Kolaydı</span>
+                    </button>
+                </div>
+
+                <!-- Session complete card -->
+                <div class="session-complete hidden" id="session-complete">
+                    <div class="complete-emoji">🎉</div>
+                    <h3>Bugünlük tamamlandı!</h3>
+                    <p>Harika iş çıkardın. Yarın devam et!</p>
+                    <button class="primary-pill-btn" id="btn-review-again">Tekrar Gözden Geçir</button>
+                </div>
+            </main>
+        </div>
+
+
+        <!-- ══════════════════════════════════════
+         2. TEST VIEW
+    ══════════════════════════════════════ -->
+        <div id="test-view" class="view">
+            <header class="sub-header">
+                <button class="back-btn" data-target="flashcard-view">←</button>
+                <h2>Bilgi Testi</h2>
+                <div class="test-progress-label"><span id="test-q-current">1</span> / <span id="test-q-total">10</span>
+                </div>
+            </header>
+
+            <div class="test-progress-track">
+                <div class="test-progress-fill" id="test-progress-fill"></div>
+            </div>
+
+            <main class="test-main">
+                <div class="test-card" id="test-card">
+                    <p class="test-sentence" id="test-sentence">This is an _____ sentence.</p>
+
+                    <form id="test-form" autocomplete="off">
+                        <input id="test-input" type="text" placeholder="Kelimeyi yaz…" spellcheck="false">
+                        <button type="submit" class="primary-pill-btn" id="btn-test-check">Kontrol Et</button>
+                    </form>
+
+                    <div class="test-feedback hidden" id="test-feedback">
+                        <span class="feedback-icon" id="feedback-icon"></span>
+                        <p class="feedback-text" id="feedback-text"></p>
+                        <p class="feedback-sentence hidden" id="feedback-sentence"></p>
+                    </div>
+                </div>
+
+                <button class="next-pill-btn hidden" id="btn-test-next">Sonraki →</button>
+            </main>
+
+            <!-- Test result overlay -->
+            <div class="result-overlay hidden" id="test-result-overlay">
+                <div class="result-card">
+                    <div class="result-emoji" id="result-emoji">🏆</div>
+                    <h3 id="result-title">Test Bitti!</h3>
+                    <p id="result-subtitle"></p>
+                    <div class="result-score" id="result-score"></div>
+                    <button class="primary-pill-btn" id="btn-result-home">Ana Sayfaya Dön</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ══════════════════════════════════════
+         3. LEARNED WORDS VIEW
+    ══════════════════════════════════════ -->
+        <div id="learned-view" class="view">
+            <header class="sub-header">
+                <button class="back-btn" data-target="flashcard-view">←</button>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <h2>Öğrendiğim Kelimeler</h2>
+                    <div class="learned-count-badge" id="learned-count-badge">0</div>
+                </div>
+                <button class="icon-btn" id="btn-review-learned" aria-label="Tekrar Et" title="Öğrenilenleri Tekrar Et">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                        <path d="M3 3v5h5"></path>
+                    </svg>
+                </button>
+            </header>
+
+            <main class="learned-main">
+                <div id="learned-actions-area" class="learned-actions-area hidden">
+                    <p class="learned-actions-title">Öğrendiklerini Pekiştir</p>
+                    <div class="learned-actions-row">
+                        <button class="action-btn-large action-test" id="btn-learned-test-cards">
+                            <span class="action-icon">🎴</span>
+                            <span>Kartlarla Test</span>
+                        </button>
+                        <button class="action-btn-large action-write" id="btn-learned-test-write">
+                            <span class="action-icon">✍️</span>
+                            <span>Yazarak Test</span>
+                        </button>
+                    </div>
+                </div>
+
+                <ul id="learned-list" class="learned-list" aria-label="Öğrenilmiş kelimeler listesi"></ul>
+
+                <div class="empty-state hidden" id="learned-empty">
+                    <span>📭</span>
+                    <p>Henüz öğrendiğin kelime yok.<br>Kartları çalışmaya başla!</p>
+                </div>
+            </main>
+        </div>
+
+
+        <!-- ══════════════════════════════════════
+         4. PROGRESS / STATS VIEW
+    ══════════════════════════════════════ -->
+        <div id="progress-view" class="view">
+            <header class="sub-header no-back">
+                <div></div>
+                <h2>İlerleme</h2>
+                <div></div>
+            </header>
+
+            <main class="progress-main">
+                <!-- Streak & Daily goal row -->
+                <div class="progress-top-row">
+                    <div class="stat-bubble streak-bubble">
+                        <span class="bubble-icon">🔥</span>
+                        <strong id="stat-streak">0</strong>
+                        <span class="bubble-label">gün seri</span>
+                    </div>
+                    <div class="stat-bubble goal-bubble">
+                        <span class="bubble-icon">🎯</span>
+                        <strong id="stat-goal-done">0</strong><span class="bubble-slash">/</span><strong
+                            id="stat-goal-total">5</strong>
+                        <span class="bubble-label">günlük hedef</span>
+                    </div>
+                </div>
+
+                <!-- Donut chart -->
+                <div class="donut-section">
+                    <svg class="donut-svg" viewBox="0 0 120 120" id="donut-svg" aria-hidden="true">
+                        <circle class="donut-bg" cx="60" cy="60" r="44" />
+                        <circle class="donut-seg donut-known" cx="60" cy="60" r="44" id="seg-known" />
+                        <circle class="donut-seg donut-learning" cx="60" cy="60" r="44" id="seg-learning" />
+                        <text class="donut-center-label" x="60" y="56" text-anchor="middle">Toplam</text>
+                        <text class="donut-center-value" x="60" y="72" text-anchor="middle" id="donut-total">0</text>
+                    </svg>
+                    <div class="donut-legend">
+                        <div class="legend-item"><span class="legend-dot known-dot"></span>Öğrendim (<span
+                                id="legend-known">0</span>)</div>
+                        <div class="legend-item"><span class="legend-dot learning-dot"></span>Zorlandım (<span
+                                id="legend-learning">0</span>)</div>
+                        <div class="legend-item"><span class="legend-dot unseen-dot"></span>Görmedim (<span
+                                id="legend-unseen">0</span>)</div>
+                    </div>
+                </div>
+
+                <!-- Daily progress bar -->
+                <div class="daily-section">
+                    <div class="daily-header">
+                        <span>Günlük Hedef</span>
+                        <span id="daily-label">0 / 5</span>
+                    </div>
+                    <div class="daily-track">
+                        <div class="daily-fill" id="daily-fill"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+
+        <!-- ══════════════════════════════════════
+         BOTTOM NAV
+    ══════════════════════════════════════ -->
+        <nav class="bottom-nav" role="navigation" aria-label="Ana Menü">
+            <button class="nav-item active" id="nav-cards" data-target="flashcard-view" aria-label="Kartlar">
+                <span class="nav-icon">🎴</span>
+                <span class="nav-label">Kartlar</span>
+            </button>
+            <button class="nav-item" id="nav-test" data-target="test-view" aria-label="Test">
+                <span class="nav-icon">✍️</span>
+                <span class="nav-label">Test</span>
+            </button>
+            <button class="nav-item" id="nav-learned" data-target="learned-view" aria-label="Öğrendim">
+                <span class="nav-icon">📚</span>
+                <span class="nav-label">Öğrendim</span>
+            </button>
+            <button class="nav-item" id="nav-progress" data-target="progress-view" aria-label="İlerleme">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">İlerleme</span>
+            </button>
+        </nav>
+
+    </div><!-- #app -->
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
