@@ -148,7 +148,11 @@ function saveStateLocalOnly() {
 // ─── Veritabanına Kaydet ────────────────────
 // Her değerlendirmede MongoDB güncellenir
 function syncToDatabase() {
-    const payload = Object.values(state.words).map(w => ({
+    // Sadece üzerinde işlem yapılmış (görüntülenmiş/çalışılmış) kelimeleri gönder
+    const modifiedWords = Object.values(state.words).filter(w => w.views > 0 || w.lastReviewed !== null);
+    if (modifiedWords.length === 0) return;
+
+    const payload = modifiedWords.map(w => ({
         id: w.id,
         ease: w.ease,
         interval: w.interval,
@@ -854,7 +858,14 @@ async function syncFromDatabase() {
             if (!lw) return;
             
             // Eğer veritabanındaki görünüm sayısı veya tarih localkinden yeniyse DB'yi esas al
-            if ((dbw.lastReviewed && (!lw.lastReviewed || dbw.lastReviewed >= lw.lastReviewed)) || dbw.views > lw.views) {
+            // ÖNEMLİ DÜZELTME: Aynı gün (>= yerine >) veritabanı boşuna eskisini ezmemeli! 
+            // views sayısına güvenmek daha garanti.
+            const isDbNewerDate = dbw.lastReviewed && lw.lastReviewed && dbw.lastReviewed > lw.lastReviewed;
+            const isDbSameDateMoreViews = dbw.lastReviewed === lw.lastReviewed && dbw.views > lw.views;
+            const isLocalEmpty = !lw.lastReviewed && dbw.lastReviewed;
+            const isDbMoreViewsOverall = dbw.views > lw.views;
+
+            if (isDbNewerDate || isDbSameDateMoreViews || isLocalEmpty || isDbMoreViewsOverall) {
                 lw.ease = dbw.ease;
                 lw.interval = dbw.interval;
                 lw.repetitions = dbw.repetitions;
